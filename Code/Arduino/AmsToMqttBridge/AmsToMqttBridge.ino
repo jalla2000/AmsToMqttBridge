@@ -220,8 +220,8 @@ void readHanPort_Kamstrup(int listSize)
 		if (debugger) debugger->println(time);
 
 		// Define a json object to keep the data
-		StaticJsonBuffer<500> jsonBuffer;
-		JsonObject& root = jsonBuffer.createObject();
+		StaticJsonDocument<500> jsonBuffer;
+		JsonObject root = jsonBuffer.to<JsonObject>();
 
 		// Any generic useful info here
 		root["id"] = WiFi.macAddress();
@@ -230,7 +230,7 @@ void readHanPort_Kamstrup(int listSize)
 
 		// Add a sub-structure to the json object, 
 		// to keep the data from the meter itself
-		JsonObject& data = root.createNestedObject("data");
+		JsonObject data = root.createNestedObject("data");
 
 		// Get the temperature too
 		tempSensor.requestTemperatures();
@@ -275,7 +275,7 @@ void readHanPort_Kamstrup(int listSize)
 		// Write the json to the debug port
 		if (debugger) {
 			debugger->print("Sending data to MQTT: ");
-			root.printTo(*debugger);
+			serializeJson(root, *debugger);
 			debugger->println();
 		}
 
@@ -285,7 +285,7 @@ void readHanPort_Kamstrup(int listSize)
 
 		// Publish the json to the MQTT server
 		char msg[1024];
-		root.printTo(msg, 1024);
+		serializeJson(root, msg, 1024);
 		mqtt.publish(ap.config.mqttPublishTopic, msg);
 	}
 }
@@ -313,8 +313,8 @@ void readHanPort_Kaifa(int listSize)
 
 		// Define a json object to keep the data
 		//StaticJsonBuffer<500> jsonBuffer;
-		DynamicJsonBuffer jsonBuffer;
-		JsonObject& root = jsonBuffer.createObject();
+		DynamicJsonDocument jsonBuffer;
+		JsonObject root = jsonBuffer.to<JsonObject>();
 
 		// Any generic useful info here
 		root["id"] = WiFi.macAddress();
@@ -323,7 +323,7 @@ void readHanPort_Kaifa(int listSize)
 
 		// Add a sub-structure to the json object, 
 		// to keep the data from the meter itself
-		JsonObject& data = root.createNestedObject("data");
+		JsonObject data = root.createNestedObject("data");
 
 		// Get the temperature too
 		tempSensor.requestTemperatures();
@@ -372,7 +372,7 @@ void readHanPort_Kaifa(int listSize)
 		// Write the json to the debug port
 		if (debugger) {
 			debugger->print("Sending data to MQTT: ");
-			root.printTo(*debugger);
+			serializeJson(root, *debugger);
 			debugger->println();
 		}
 
@@ -382,7 +382,7 @@ void readHanPort_Kaifa(int listSize)
 
 		// Publish the json to the MQTT server
 		char msg[1024];
-		root.printTo(msg, 1024);
+		serializeJson(root, msg, 1024);
 		mqtt.publish(ap.config.mqttPublishTopic, msg);
 	}
 }
@@ -490,15 +490,15 @@ void sendMqttData(String data)
 	}
 
 	// Build a json with the message in a "data" attribute
-	DynamicJsonBuffer jsonBuffer;
-	JsonObject& json = jsonBuffer.createObject();
+	DynamicJsonDocument jsonBuffer;
+	JsonObject json = jsonBuffer.to<JsonObject>();
 	json["id"] = WiFi.macAddress();
 	json["up"] = millis();
 	json["data"] = data;
 
 	// Stringify the json
 	String msg;
-	json.printTo(msg);
+	serializeJson(json, msg);
 
 	// Send the json over MQTT
 	mqtt.publish(ap.config.mqttPublishTopic, msg.c_str());
